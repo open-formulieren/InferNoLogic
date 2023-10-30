@@ -28,3 +28,21 @@ Install with npm or yarn:
 npm install --save-dev @open-formulieren/infernologic
 yarn add -D @open-formulieren/infernologic
 ```
+
+## References
+
+Builds on implementations from
+[domdomegg/hindley-milner-typescript-minimal](https://github.com/domdomegg/hindley-milner-typescript-minimal)
+for
+
+- Algorithm W
+
+  Damas, L. and Milner, R. (1982). Principal type-schemes for functional programs. Proceedings of
+  the 9th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages - POPL '82.
+  https://doi.org/10.1145/582153.582176
+
+- Algorithm M
+
+  Lee, O. and Yi, K. (1998). Proofs about a folklore let-polymorphic type inference algorithm. ACM
+  Transactions on Programming Languages and Systems, 20(4), 707-723.
+  https://doi.org/10.1145/291891.291892
