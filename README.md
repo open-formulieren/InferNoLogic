@@ -1,0 +1,30 @@
+# InferNoLogic
+
+[![Run CI build and tests](https://github.com/open-formulieren/InferNoLogic/actions/workflows/ci.yml/badge.svg)](https://github.com/open-formulieren/InferNoLogic/actions/workflows/ci.yml)
+[![NPM package](https://img.shields.io/npm/v/@open-formulieren/infernologic.svg)](https://www.npmjs.com/package/@open-formulieren/infernologic)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat)](https://github.com/prettier/prettier)
+
+Type checker for [JsonLogic](https://jsonlogic.com/) expressions with full type inference
+
+## Design goal
+
+Infer the result types of JsonLogic expressions and possibly of data referenced in `{"var": ...}`
+expressions.
+
+- without the need of extra annotations; full inference without extra JsonLogic syntax
+- fast; should run in a browser while editing
+- soundness over completeness; prefer false negatives over false positives. For example: in
+  `{"if": [predicate-expression, then-expression, else-expression]}` require then- and
+  else-expressions of the same type, even though JsonLogic allows them to differing ones.
+- actionable error messages; No "Computer says no" but a location in the expression tree with as
+  narrow a scope as possible, with some helpful humane hint. (Aim for [Elm](https://elm-lang.org)
+  and [Rust](https://www.rust-lang.org) compiler helpfulness)
+
+## Usage
+
+Install with npm or yarn:
+
+```bash
+npm install --save-dev @open-formulieren/infernologic
+yarn add -D @open-formulieren/infernologic
+```

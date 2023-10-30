@@ -1,0 +1,44 @@
+{
+  "name": "@open-formulieren/InferNoLogic",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "module": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "build": "tsc --emitDeclarationOnly",
+    "build:docs": "typedoc",
+    "test": "npm run build && tsd",
+    "format": "prettier --write 'src/**/*'",
+    "checkformat": "prettier --check 'src/**/*'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/open-formulieren/InferNoTypes.git"
+  },
+  "keywords": [
+    "formio",
+    "forms",
+    "inference",
+    "jsonlogic",
+    "open",
+    "typescript"
+  ],
+  "author": "Maykin Media <support@maykinmedia.nl>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/open-formulieren/InferNoTypes/issues"
+  },
+  "homepage": "https://github.com/open-formulieren/InferNoTypes#readme",
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.1.1",
+    "@types/node": "^18",
+    "prettier": "^2.8.8",
+    "tsd": "^0.28.1",
+    "typedoc": "^0.24.8",
+    "typescript": "^5.1.6"
+  }
+}
