@@ -46,7 +46,7 @@ export const defaultContext = makeContext({
   missing: f(array(string), array(string)),
   missing_some: f(number, array(string), array(string)),
   // Logic and Boolean Operations
-  if: forall([a], f(bool, a, a, a)),
+  if: forall([a, b], f(a, b, b, b)),
   // TODO: should the parameters of (in-)equaility be of the same type 🤔
   // forcing === and !== isn't a eslint rule for nothing...
   '==': forall([a, b], f(a, b, bool)),
@@ -55,8 +55,8 @@ export const defaultContext = makeContext({
   '!==': forall([a, b], f(a, b, bool)),
   '!': forall([a], f(a, bool)),
   '!!': forall([a], f(a, bool)),
-  or: f(bool, bool, bool),
-  and: f(bool, bool, bool),
+  or: forall([a, b], f(a, b, bool)),
+  and: forall([a, b], f(a, b, bool)),
   // Numeric Operations
   '>': f(number, number, bool),
   '>=': f(number, number, bool),
@@ -80,8 +80,8 @@ export const defaultContext = makeContext({
   // Array Operations
   // forall a b. :: [a] -> (a -> b) -> [b]
   map: forall([a, b], f(array(a), f(a, b), array(b))),
-  // forall a. :: [a] -> (a -> bool) -> [a]
-  filter: forall([a], f(array(a), f(a, bool), array(a))),
+  // forall a truthy. :: [a] -> (a -> truthy) -> [a]
+  filter: forall([a, b], f(array(a), f(a, b), array(a))),
   // forall a b. :: [b] -> (a -> b -> a) -> a -> a
   reduce: forall([a, b], f(array(b), f(a, b, a), a, a)),
   // forall a. :: [a] -> (a -> bool) -> bool
