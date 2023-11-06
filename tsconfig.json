@@ -12,6 +12,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "noImplicitAny": true,
+    "resolveJsonModule": true,
     "strictBindCallApply": true,
     "strictNullChecks": true,
     "allowSyntheticDefaultImports": true,

@@ -1,4 +1,5 @@
 // Copyright (c) 2023 Adam Jones
+// Copyright (c) 2023 Maykin
 //
 // SPDX-License-Identifier: MIT
 import {Substitution, generalise, instantiate, makeSubstitution, newTypeVar, unify} from './helper';
@@ -9,6 +10,14 @@ export const W = (typEnv: Context, expr: Expression): [Substitution, MonoType] =
     const value = typEnv[expr.x];
     if (value === undefined) throw new Error(`Undefined variable: ${expr.x}`);
     return [makeSubstitution({}), instantiate(value)];
+  }
+
+  if (expr.type === 'num') {
+    return [makeSubstitution({}), {type: 'ty-app', C: 'Number', mus: []}];
+  }
+
+  if (expr.type === 'str') {
+    return [makeSubstitution({}), {type: 'ty-app', C: 'String', mus: []}];
   }
 
   if (expr.type === 'abs') {

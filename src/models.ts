@@ -1,4 +1,5 @@
 // Copyright (c) 2023 Adam Jones
+// Copyright (c) 2023 Maykin
 //
 // SPDX-License-Identifier: MIT
 
@@ -13,7 +14,19 @@ export type Expression =
   | VariableExpression
   | ApplicationExpression
   | AbstractionExpression
-  | LetExpression;
+  | LetExpression
+  | NumberLiteral
+  | StringLiteral;
+
+export interface NumberLiteral {
+  type: 'num';
+  x: number;
+}
+
+export interface StringLiteral {
+  type: 'str';
+  x: string;
+}
 
 export interface VariableExpression {
   type: 'var';
@@ -51,7 +64,7 @@ export type MonoType = TypeVariable | TypeFunctionApplication;
 
 export type PolyType = MonoType | TypeQuantifier;
 
-export type TypeFunction = '->' | 'Bool' | 'Int' | 'List';
+export type TypeFunction = '->' | 'Array' | 'Boolean' | 'Number' | 'String' | 'Null';
 
 export interface TypeVariable {
   type: 'ty-var';
