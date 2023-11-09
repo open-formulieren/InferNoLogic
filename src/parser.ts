@@ -26,9 +26,9 @@ const f = (mu1: MonoType, mu2: MonoType, ...rest: MonoType[]): TypeFunctionAppli
   const [mu3, ...extra] = rest;
   return {type: 'ty-app', C: '->', mus: [mu1, f(mu2, mu3, ...extra)]};
 };
-const a: TypeVariable = {type: 'ty-var', a: 'a'};
-const b: TypeVariable = {type: 'ty-var', a: 'b'};
-// const c: TypeVariable = {type: 'ty-var', a: 'c'};
+const makeTypeVars = (n: number): TypeVariable[] =>
+  [...'abcdefghijklmnopqrstuvwxyz'].slice(0, n).map(a => ({type: 'ty-var', a}));
+const [a, b] = makeTypeVars(2);
 const forall = (typevars: TypeVariable[], sigma: PolyType): TypeQuantifier => {
   const [{a: name}, ...rest] = typevars;
   return {type: 'ty-quantifier', a: name, sigma: rest.length ? forall(rest, sigma) : sigma};
@@ -47,6 +47,7 @@ export const defaultContext = makeContext({
   missing_some: f(number, array(string), array(string)),
   // Logic and Boolean Operations
   if: forall([a, b], f(a, b, b, b)),
+  '?:': forall([a, b], f(a, b, b, b)), // ternary from tests.json
   // TODO: should the parameters of (in-)equaility be of the same type 🤔
   // forcing === and !== isn't a eslint rule for nothing...
   '==': forall([a, b], f(a, b, bool)),
@@ -142,11 +143,29 @@ const maybeJsonLogicExpression = (json: JSONValue, context: Context): json is JS
 const repr = (thing: unknown): string => JSON.stringify(thing) || thing?.toString?.() || '';
 
 /**
+ * @thing - any JSONValue
+ * @return a string for display the type of `thing` to the user
+ */
+const reprType = (thing: JSONValue, context: Context): string => {
+  if (typeof thing === 'boolean') return 'Boolean';
+  if (thing === null) return 'Null';
+  if (typeof thing === 'number') return 'Number';
+  if (typeof thing === 'string') return 'String';
+  if (Array.isArray(thing)) return 'Array';
+  try {
+    if (thing && maybeJsonLogicExpression(thing, context)) {
+      return 'JsonLogic rule';
+    }
+  } catch (error) {}
+  return 'Object';
+};
+
+/**
  * Turn exp `{"var": "foo"}` into `["var", ["foo"]]`
  */
 const destructureJsonLogicExpression = (
   exp: Readonly<JSONObject>,
-  context: Readonly<Context>,
+  context: Readonly<Context>
 ): [operation: string, params: JSONArray] => {
   const [operation, ...tooMany] = operationsFrom(exp, context);
   if (tooMany.length) {
@@ -287,11 +306,24 @@ export const parseJsonLogicExpression = (
   if (operation === 'var') {
     const [varPath, defaultValue, ...tooMany] = args;
     // parseErrors
+    if (varPath === undefined)
+      throw Error(
+        `The "var" operation needs a string or positive integer argument.\n` +
+          `It's missing in ${repr(json)}. Did you mean {"var": [""]} ?`
+      );
     if (!isString(varPath) && !isNatural(varPath))
-      throw Error(`The argument of "var" operation should be a string or positive integer
-      I found a ${typeof varPath} in: ${repr(json)}.`);
+      throw Error(
+        `The argument of a "var" operation should be a string or positive integer.\n` +
+          `I found a ${reprType(varPath, context)} in: ${repr(json)}.${
+            !varPath
+              ? '\nDid you mean {"var": [""]} ?'
+              : maybeJsonLogicExpression(varPath, context)
+              ? '\nIt could be correct; "var" can take a rule that describes a string or positive integer value. But I can\'t judge the correctness of its further use, because that completely depends on the data.'
+              : ''
+          }`
+      );
     if (tooMany.length) {
-      throw Error(`JsonLogicExpression may only contain one operation.
+      throw Error(`The "var" operation takes only one value.
       I found ${repr(args)} in: ${repr(json)}.
       Maybe something went wrong with your braces?`);
     }
@@ -317,11 +349,49 @@ export const parseJsonLogicExpression = (
     operation = `3-ary ${operation}`;
   } else if (new Set(['-', '+']).has(operation) && args.length === 1) {
     operation = `1-ary ${operation}`;
-  } else if ((operation === '+' || operation === '*') && args.length > 2) {
+  } else if ((operation === '+' || operation === '*') && args.length != 2) {
+    // NB unary + should be handled already...
     // monomorphise sum and product versions of + and *
     operation = `${args.length}-ary ${operation}`;
     // add n-ary function to the context as f(n+1 numbers) (one extra for the return value)
     context[operation] = f(number, number, ...Array(args.length - 1).fill(number));
+  } else if ((operation === 'and' || operation === 'or') && args.length != 2) {
+    if (args.length === 1)
+      throw Error(
+        `This ${operation} operation is incomplete ${repr(json)}.\n` +
+          `Either add more arguments or replace it with just ${args[0]}.`
+      );
+    // variadic and/or
+    // monomorphise to: forall a b c ... .:: a -> b -> c -> ... -> bool
+    operation = `${args.length}-ary ${operation}`;
+    const [a, b, ...cdef] = makeTypeVars(args.length);
+    context[operation] = forall([a, b, ...cdef], f(a, b, ...cdef, bool));
+  } else if (operation === 'if') {
+    if (args.length % 2 == 0 || args.length == 1) {
+      throw Error(
+        `This ${operation} operation is incomplete ${repr(json)}.${
+          args.length >= 2
+            ? // TODO: add a variable infer its type, (int/string) and suggest resp. 0 and ""
+              '\n"var" takes an odd number of values. Did you forget the value for the else case?'
+            : ''
+        }`
+      );
+    }
+    if (args.length > 3) {
+      // it's easy to make mistakes in long "elif chains"
+      // let's enforce explicit bools instead of truthy values
+      operation = `${args.length}-ary ${operation}`;
+      // bool, a, bool, a, ..., a, a
+      context[operation] = f(
+        bool,
+        a,
+        ...Array((args.length - 3) / 2)
+          .fill(null)
+          .flatMap(_ => [bool, a]),
+        a,
+        a
+      );
+    }
   } else if (new Set(['map', 'filter', 'all', 'some', 'none']).has(operation)) {
     const [newContext, [arrayExp, e2]] = parseValues(args, context);
     return [

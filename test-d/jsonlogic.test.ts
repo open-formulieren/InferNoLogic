@@ -4,11 +4,14 @@ import {W} from '../src/w';
 import cases from './tests.json';
 
 type Case = [rule: JSONValue, data: JSONValue, result: JSONValue];
-// type ErrorCase = [rule: JSONValue, data: JSONValue, result: JSONValue, error: string];
 // obvious cast; imported json
 // filter "# commment string"
 const isCase = (testCase: string | unknown[]): testCase is Case =>
   Array.isArray(testCase) && testCase.length == 3;
+type ErrorCase = [rule: JSONValue, data: JSONValue, result: JSONValue, error: string];
+
+const isErrorCase = (testCase: string | unknown[]): testCase is ErrorCase =>
+  Array.isArray(testCase) && testCase.length == 4;
 
 const inferResultType = (jsonLogic: JSONValue, data: JSONValue): string => {
   const context = parseContext(data);
@@ -38,5 +41,18 @@ describe('Test against JsonLogic suite', () => {
       const t = inferResultType(rule, data);
       expect(t).toBe(getType(result));
     }
+  );
+  it.each(cases.filter(isErrorCase))(
+    'can detect %j, with context %j, does not typecheck with %j and raises some Error containing %j',
+    (rule: JSONValue, data: JSONValue, result: JSONValue, error: string) => {
+      if (error.startsWith("TODO"))
+        expect(() => inferResultType(rule, data)).toThrow("")
+      else if (error.startsWith("Valid")){
+        const t = inferResultType(rule, data);
+        expect(t).not.toBe(getType(result));
+      } else
+        expect(() => inferResultType(rule, data)).toThrow(error)
+
+      }
   );
 });
