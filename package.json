@@ -1,7 +1,7 @@
 {
   "name": "@open-formulieren/InferNoLogic",
   "version": "0.1.0",
-  "description": "",
+  "description": "InferNoLogic is the TypeScript library designed to cool down the hellfire of type mismatches in JsonLogic. Navigate through your complex logic rules with the confidence that your types align.",
   "main": "index.js",
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -9,7 +9,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc --emitDeclarationOnly",
+    "build": "tsc",
     "build:docs": "typedoc",
     "test": "jest",
     "format": "prettier --write 'src/**/*'",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/open-formulieren/InferNoTypes.git"
+    "url": "git+ssh://git@github.com/open-formulieren/InferNoLogic.git"
   },
   "keywords": [
     "formio",
