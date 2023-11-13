@@ -1,5 +1,5 @@
 {
-  "name": "@open-formulieren/InferNoLogic",
+  "name": "@open-formulieren/infernologic",
   "version": "0.1.0",
   "description": "InferNoLogic is the TypeScript library designed to cool down the hellfire of type mismatches in JsonLogic. Navigate through your complex logic rules with the confidence that your types align.",
   "main": "index.js",
@@ -30,9 +30,9 @@
   "author": "Maykin Media <support@maykinmedia.nl>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/open-formulieren/InferNoTypes/issues"
+    "url": "https://github.com/open-formulieren/InferNoLogic/issues"
   },
-  "homepage": "https://github.com/open-formulieren/InferNoTypes#readme",
+  "homepage": "https://github.com/open-formulieren/InferNoLogic#readme",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.1",
     "@types/jest": "^29.5.7",
