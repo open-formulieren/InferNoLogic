@@ -52,8 +52,8 @@ export const defaultContext = makeContext({
   // forcing === and !== isn't a eslint rule for nothing...
   '==': forall([a, b], f(a, b, bool)),
   '!=': forall([a, b], f(a, b, bool)),
-  '===': forall([a, b], f(a, b, bool)),
-  '!==': forall([a, b], f(a, b, bool)),
+  '===': forall([a], f(a, a, bool)),
+  '!==': forall([a], f(a, a, bool)),
   '!': forall([a], f(a, bool)),
   '!!': forall([a], f(a, bool)),
   or: forall([a, b], f(a, b, bool)),
