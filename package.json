@@ -1,6 +1,6 @@
 {
   "name": "@open-formulieren/infernologic",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "InferNoLogic is the TypeScript library designed to cool down the hellfire of type mismatches in JsonLogic. Navigate through your complex logic rules with the confidence that your types align.",
   "main": "index.js",
   "module": "./lib/index.js",
