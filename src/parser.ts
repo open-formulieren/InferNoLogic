@@ -97,16 +97,18 @@ export const defaultContext = makeContext({
   // TODO: overload with sum type encoding
   // "in": f(string, string, bool),
   cat: f(array(string), string),
+  // add a unary cat to cast to string
+  '1-ary cat': forall([a], f(a, string)),
   substr: f(string, number, string),
   '3-ary substr': f(string, number, number, string),
   // Miscellaneous
   log: forall([a], f(a, a)),
 });
 
-type JsonLogicParameter = JsonLogicExpression | boolean | string | number | JsonLogicParameter[];
-type JsonLogicExpression =
-  | {[operation: string]: JsonLogicParameter[]} // normal form e.g. {"var": ["path.in.data"]}
-  | {[operation: string]: JsonLogicParameter}; // unary operation e.g. {"var": "path.in.data"}
+type JsonLogicExpression = JsonLogicOperation | boolean | string | number | JsonLogicExpression[];
+type JsonLogicOperation =
+  | {[operation: string]: JsonLogicExpression[]} // normal form e.g. {"var": ["path.in.data"]}
+  | {[operation: string]: JsonLogicExpression}; // unary operation e.g. {"var": "path.in.data"}
 
 /**
  * @param json - (malformed?) JsonLogic rule
@@ -345,11 +347,15 @@ export const parseJsonLogicExpression = (
       {[varName]: {type: 'ty-var', a: varName}, ...context},
       {type: 'var', x: varName},
     ];
-  } else if (new Set(['<', '<=', 'substr']).has(operation) && args.length === 3) {
+  } else if (['<', '<=', 'substr'].includes(operation) && args.length === 3) {
     operation = `3-ary ${operation}`;
-  } else if (new Set(['-', '+']).has(operation) && args.length === 1) {
+  } else if (['-', '+'].includes(operation) && args.length === 1) {
     operation = `1-ary ${operation}`;
   } else if ((operation === '+' || operation === '*') && args.length != 2) {
+    if (args.length == 0)
+      throw Error(
+        `This ${operation} operation is incomplete ${repr(json)}.\nIt needs some arguments.`
+      );
     // NB unary + should be handled already...
     // monomorphise sum and product versions of + and *
     operation = `${args.length}-ary ${operation}`;
@@ -392,7 +398,7 @@ export const parseJsonLogicExpression = (
         a
       );
     }
-  } else if (new Set(['map', 'filter', 'all', 'some', 'none']).has(operation)) {
+  } else if (['map', 'filter', 'all', 'some', 'none'].includes(operation)) {
     const [newContext, [arrayExp, e2]] = parseValues(args, context);
     return [
       newContext,
@@ -413,7 +419,7 @@ export const parseJsonLogicExpression = (
         initialAccumulator,
       ]),
     ];
-  } else if (new Set(['cat', 'merge', 'missing', 'min', 'max']).has(operation)) {
+  } else if (['cat', 'merge', 'missing', 'min', 'max'].includes(operation)) {
     // pass all params for n-adic functions as a single array
     const [newContext, arrayExp] = parseValue(args, context);
     return [newContext, apply([{type: 'var', x: operation}, arrayExp])];
@@ -489,4 +495,34 @@ export const parseContext = (
   return Object.entries(json)
     .map(([key, value]) => parseContext(value, context, [...path, key]))
     .reduce((acc, curr) => ({...acc, ...curr}), context);
+};
+
+export const stringify = (expr: Expression): JsonLogicExpression => {
+  switch (expr.type) {
+    case 'num':
+      return expr.x;
+    case 'str':
+      return expr.x;
+    case 'var':
+      const name = expr.x.replace(/^var: /, '');
+      return name === '[]' ? [] : {var: name}; // [] is the cons cell "nil"
+    case 'app':
+      const {e1, e2} = expr;
+      switch (e1.type) {
+        case 'var':
+          const op = e1.x.replace(/^\d+-ary /, '');
+          return {[op]: [stringify(e2)]};
+        case 'app':
+          if (e1.e1.type === 'var' && e1.e1.x == 'cons')
+            return [stringify(e1.e2)].concat(stringify(e2)); // handle cons cell
+          return Object.fromEntries(
+            Object.entries(stringify(e1)).map(([op, arg]) => [op, [...arg, stringify(e2)]])
+          );
+      }
+  }
+  const unexpectedExpression = JSON.stringify(expr);
+  ((_: never): never => {
+    throw unexpectedExpression;
+    // @ts-ignore
+  })(expr);
 };

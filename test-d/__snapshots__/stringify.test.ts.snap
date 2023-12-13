@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`"+" operations not enough arguments 1`] = `
+"This + operation is incomplete {"+":[]}.
+It needs some arguments."
+`;

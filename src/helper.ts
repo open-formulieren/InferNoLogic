@@ -1,7 +1,17 @@
 // Copyright (c) 2023 Adam Jones
 //
 // SPDX-License-Identifier: MIT
-import {Context, MonoType, PolyType, TypeVariable, isContext, makeContext} from './models';
+import {
+  Context,
+  ExplainPath,
+  Expression,
+  MonoType,
+  PolyType,
+  TypeFunctionApplication,
+  TypeVariable,
+  isContext,
+  makeContext,
+} from './models';
 
 // substitutions
 
@@ -45,8 +55,9 @@ function apply(
   if (value.type === 'ty-quantifier') {
     return {...value, sigma: apply(s, value.sigma)};
   }
-
-  throw new Error('Unknown argument passed to substitution');
+  ((_: never): never => {
+    throw new Error('Unknown argument passed to substitution');
+  })(value);
 }
 
 const combine = (s1: Substitution, s2: Substitution): Substitution => {
@@ -84,7 +95,9 @@ export const instantiate = (
     return instantiate(type.sigma, mappings);
   }
 
-  throw new Error('Unknown type passed to instantiate');
+  ((_: never): never => {
+    throw new Error('Unknown type passed to instantiate');
+  })(type);
 };
 
 // generalise
@@ -119,30 +132,53 @@ const freeVars = (value: PolyType | Context): string[] => {
     return freeVars(value.sigma).filter(v => v !== value.a);
   }
 
-  throw new Error('Unknown argument passed to substitution');
+  ((_: never): never => {
+    throw new Error('Unknown argument passed to substitution');
+  })(value);
 };
 
 // unify
 
-export const unify = (type1: MonoType, type2: MonoType): Substitution => {
+export const unify = (
+  type1: MonoType,
+  type2: MonoType,
+  expr: Expression,
+  path1: ExplainPath = [],
+  path2: ExplainPath = []
+): Substitution => {
   if (type1.type === 'ty-var' && type2.type === 'ty-var' && type1.a === type2.a) {
     return makeSubstitution({});
   }
 
   if (type1.type === 'ty-var') {
-    if (contains(type2, type1)) throw new Error('Infinite type detected');
+    if (contains(type2, type1))
+      throw new Error(`Infinite type detected: ${type1} occurs in ${type2}`);
 
+    if (type2.type === 'ty-var') {
+      // var with other name -> explain
+      // TODO? reverseAliasPath(type1);
+      type1.explain = [type2, {type: 'ExplainAlias', path1, path2, expr}];
+    } else if (type2.type === 'ty-app') {
+      // instantiation
+      // TODO? reverseAliasPath(type1);
+      type1.explain = [type2, {type: 'ExplainInstan', path: path1, expr}];
+    } else {
+      ((_: never): never => {
+        throw new Error('Unknown argument passed to unify');
+      })(type2);
+    }
     return makeSubstitution({
       [type1.a]: type2,
     });
   }
 
   if (type2.type === 'ty-var') {
-    return unify(type2, type1);
+    return unify(type2, type1, expr, path2, path1);
   }
 
   if (type1.C !== type2.C) {
-    throw new Error(`Could not unify types (different type functions): ${type1.C} and ${type2.C}`);
+    const msg = formatUnificationError(type1, type2, expr, path1, path2);
+    throw new Error(msg);
   }
 
   if (type1.mus.length !== type2.mus.length) {
@@ -151,9 +187,53 @@ export const unify = (type1: MonoType, type2: MonoType): Substitution => {
 
   let s: Substitution = makeSubstitution({});
   for (let i = 0; i < type1.mus.length; i++) {
-    s = s(unify(s(type1.mus[i]), s(type2.mus[i])));
+    s = s(
+      unify(s(type1.mus[i]), s(type2.mus[i]), expr, addHist(path1, type1), addHist(path2, type2))
+    );
   }
   return s;
+};
+
+const formatUnificationError = (
+  type1: TypeFunctionApplication,
+  type2: TypeFunctionApplication,
+  expr: Expression,
+  _path1: ExplainPath,
+  _path2: ExplainPath
+): string => {
+  // console.dir({type1, type2, expr, _path1, _path2}, {depth: Infinity});
+  if (expr.type === 'app') {
+    const msg = `"${reprExpression(expr.e1)}" expects "${reprExpression(expr.e2)}" to be a ${
+      type1.C
+    }, but it is a ${type2.C}`;
+    return msg;
+  }
+  throw new Error(`Unexpected expression type ${expr}`);
+};
+
+export const reprExpression = (expr: Expression): string => {
+  if (expr.type === 'app') return reprExpression(expr.e1);
+  if (expr.type === 'var') return expr.x.startsWith('var: ') ? expr.x.substring(5) : expr.x;
+  if (expr.type === 'num') return expr.x.toString();
+  if (expr.type === 'str') return expr.x.toString();
+  if (expr.type === 'abs') return `{"${expr.x}": ${reprExpression(expr.e)}}`;
+  if (expr.type === 'let')
+    return `"${expr.x}" = ${reprExpression(expr.e1)} in ${reprExpression(expr.e2)}`;
+  ((_: never): never => {
+    throw new Error(`Unexpected expression type ${expr}`);
+  })(expr);
+};
+
+const addHist = (history: ExplainPath, root: MonoType): ExplainPath => {
+  const _addHist = (root: MonoType): ExplainPath => {
+    if (root.type === 'ty-app' || !root.explain) return [];
+    const [ty, _explain] = root.explain;
+    const explPath = _addHist(ty);
+    // root.explain = [explPath, _explain]
+    return [root, ...explPath];
+  };
+  // and return the new history
+  return history.concat(_addHist(root));
 };
 
 const contains = (value: MonoType, type2: TypeVariable): boolean => {
@@ -165,5 +245,7 @@ const contains = (value: MonoType, type2: TypeVariable): boolean => {
     return value.mus.some(t => contains(t, type2));
   }
 
-  throw new Error('Unknown argument passed to substitution');
+  ((_: never): never => {
+    throw new Error('Unknown argument passed to substitution');
+  })(value);
 };

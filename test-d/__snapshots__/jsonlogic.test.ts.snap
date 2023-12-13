@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Test against JsonLogic suite can detect {"!==":[1,"1"]}, with context {}, does not typecheck 1`] = `""!==" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"*":["1",1]}, with context {}, does not typecheck 1`] = `""*" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"+":["1",1]}, with context {}, does not typecheck 1`] = `""+" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"/":["1",1]}, with context {}, does not typecheck 1`] = `""/" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"<":["1",2]}, with context {}, does not typecheck 1`] = `""<" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"<=":["1",2]}, with context {}, does not typecheck 1`] = `""<=" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"===":[0,"0"]}, with context null, does not typecheck 1`] = `""===" expects "0" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"===":[1,"1"]}, with context {}, does not typecheck 1`] = `""===" expects "1" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {">":["2",1]}, with context {}, does not typecheck 1`] = `"">" expects "2" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {">=":["2",1]}, with context {}, does not typecheck 1`] = `"">=" expects "2" to be a Number, but it is a String"`;
+
+exports[`Test against JsonLogic suite can detect {"-":["1",1]}, with context {}, does not typecheck 1`] = `""-" expects "1" to be a Number, but it is a String"`;

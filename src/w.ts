@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: MIT
 import {Substitution, generalise, instantiate, makeSubstitution, newTypeVar, unify} from './helper';
-import {Context, Expression, MonoType, makeContext} from './models';
+import {Context, Expression, MonoType, PolyType, makeContext} from './models';
 
 export const W = (typEnv: Context, expr: Expression): [Substitution, MonoType] => {
   if (expr.type === 'var') {
@@ -44,12 +44,27 @@ export const W = (typEnv: Context, expr: Expression): [Substitution, MonoType] =
     const [s2, t2] = W(s1(typEnv), expr.e2);
     const beta = newTypeVar();
 
-    const s3 = unify(s2(t1), {
-      type: 'ty-app',
-      C: '->',
-      mus: [t2, beta],
-    });
-    return [s3(s2(s1)), s3(beta)];
+    try {
+      const s3 = unify(
+        s2(t1),
+        {
+          type: 'ty-app',
+          C: '->',
+          mus: [t2, beta],
+        },
+        expr
+      );
+      return [s3(s2(s1)), s3(beta)];
+    } catch (error) {
+      const hasExplanation = ([k, t]: [string, PolyType]): boolean =>
+        k.startsWith('var') && t.type == 'ty-var' && t.explain != undefined;
+      const withExpl = Object.fromEntries(Object.entries(typEnv).filter(hasExplanation));
+      withExpl;
+      // TODO expr here !== expr from the throw site in unify!!
+      // reversing explainPaths is tricky... stringifying the larger expr and the sub expr from unify
+      // will probably provide enough context.
+      throw error;
+    }
   }
 
   if (expr.type === 'let') {

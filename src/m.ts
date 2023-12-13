@@ -10,17 +10,29 @@ export const M = (typEnv: Context, expr: Expression, type: MonoType): Substituti
 
     const value = typEnv[expr.x];
     if (value === undefined) throw new Error(`Undefined variable: ${expr.x}`);
-    return unify(type, instantiate(value));
+    return unify(type, instantiate(value), expr);
+  }
+
+  if (expr.type === 'num') {
+    return unify(type, {type: 'ty-app', C: 'Number', mus: []}, expr);
+  }
+
+  if (expr.type === 'str') {
+    return unify(type, {type: 'ty-app', C: 'String', mus: []}, expr);
   }
 
   if (expr.type === 'abs') {
     const beta1 = newTypeVar();
     const beta2 = newTypeVar();
-    const s1 = unify(type, {
-      type: 'ty-app',
-      C: '->',
-      mus: [beta1, beta2],
-    });
+    const s1 = unify(
+      type,
+      {
+        type: 'ty-app',
+        C: '->',
+        mus: [beta1, beta2],
+      },
+      expr
+    );
     const s2 = M(
       makeContext({
         ...s1(typEnv),
