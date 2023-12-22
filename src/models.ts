@@ -69,7 +69,14 @@ export type TypeFunction = '->' | 'Array' | 'Boolean' | 'Number' | 'String' | 'N
 export interface TypeVariable {
   type: 'ty-var';
   a: string;
+  explain?: [MonoType, TypeExplanation]; // Optional explanation
 }
+
+export type TypeExplanation =
+  | {type: 'ExplainAlias'; path1: ExplainPath; path2: ExplainPath; expr: Expression}
+  | {type: 'ExplainInstan'; path: ExplainPath; expr: Expression};
+
+export type ExplainPath = TypeVariable[];
 
 export interface TypeFunctionApplication {
   type: 'ty-app';
