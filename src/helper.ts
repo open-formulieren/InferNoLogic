@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Adam Jones
 //
 // SPDX-License-Identifier: MIT
+import {InferenceError} from './exceptions';
 import {
   Context,
   ExplainPath,
@@ -56,7 +57,7 @@ function apply(
     return {...value, sigma: apply(s, value.sigma)};
   }
   ((_: never): never => {
-    throw new Error('Unknown argument passed to substitution');
+    throw new InferenceError('Unknown argument passed to substitution');
   })(value);
 }
 
@@ -96,7 +97,7 @@ export const instantiate = (
   }
 
   ((_: never): never => {
-    throw new Error('Unknown type passed to instantiate');
+    throw new InferenceError('Unknown type passed to instantiate');
   })(type);
 };
 
@@ -133,7 +134,7 @@ const freeVars = (value: PolyType | Context): string[] => {
   }
 
   ((_: never): never => {
-    throw new Error('Unknown argument passed to substitution');
+    throw new InferenceError('Unknown argument passed to substitution');
   })(value);
 };
 
@@ -152,7 +153,7 @@ export const unify = (
 
   if (type1.type === 'ty-var') {
     if (contains(type2, type1))
-      throw new Error(`Infinite type detected: ${type1} occurs in ${type2}`);
+      throw new InferenceError(`Infinite type detected: ${type1} occurs in ${type2}`);
 
     if (type2.type === 'ty-var') {
       // var with other name -> explain
@@ -164,7 +165,7 @@ export const unify = (
       type1.explain = [type2, {type: 'ExplainInstan', path: path1, expr}];
     } else {
       ((_: never): never => {
-        throw new Error('Unknown argument passed to unify');
+        throw new InferenceError('Unknown argument passed to unify');
       })(type2);
     }
     return makeSubstitution({
@@ -178,11 +179,13 @@ export const unify = (
 
   if (type1.C !== type2.C) {
     const msg = formatUnificationError(type1, type2, expr, path1, path2);
-    throw new Error(msg);
+    throw new InferenceError(msg);
   }
 
   if (type1.mus.length !== type2.mus.length) {
-    throw new Error(`Could not unify types (different argument lengths): ${type1} and ${type2}`);
+    throw new InferenceError(
+      `Could not unify types (different argument lengths): ${type1} and ${type2}`
+    );
   }
 
   let s: Substitution = makeSubstitution({});
@@ -208,7 +211,7 @@ const formatUnificationError = (
     }, but it is a ${type2.C}`;
     return msg;
   }
-  throw new Error(`Unexpected expression type ${expr}`);
+  throw new InferenceError(`Unexpected expression type ${expr}`);
 };
 
 export const reprExpression = (expr: Expression): string => {
@@ -220,7 +223,7 @@ export const reprExpression = (expr: Expression): string => {
   if (expr.type === 'let')
     return `"${expr.x}" = ${reprExpression(expr.e1)} in ${reprExpression(expr.e2)}`;
   ((_: never): never => {
-    throw new Error(`Unexpected expression type ${expr}`);
+    throw new InferenceError(`Unexpected expression type ${expr}`);
   })(expr);
 };
 
@@ -246,6 +249,6 @@ const contains = (value: MonoType, type2: TypeVariable): boolean => {
   }
 
   ((_: never): never => {
-    throw new Error('Unknown argument passed to substitution');
+    throw new InferenceError('Unknown argument passed to substitution');
   })(value);
 };
