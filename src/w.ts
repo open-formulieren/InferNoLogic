@@ -2,13 +2,14 @@
 // Copyright (c) 2023 Maykin
 //
 // SPDX-License-Identifier: MIT
+import {InferenceError} from './exceptions';
 import {Substitution, generalise, instantiate, makeSubstitution, newTypeVar, unify} from './helper';
 import {Context, Expression, MonoType, PolyType, makeContext} from './models';
 
 export const W = (typEnv: Context, expr: Expression): [Substitution, MonoType] => {
   if (expr.type === 'var') {
     const value = typEnv[expr.x];
-    if (value === undefined) throw new Error(`Undefined variable: ${expr.x}`);
+    if (value === undefined) throw new InferenceError(`Undefined variable: ${expr.x}`);
     return [makeSubstitution({}), instantiate(value)];
   }
 
@@ -78,5 +79,5 @@ export const W = (typEnv: Context, expr: Expression): [Substitution, MonoType] =
     );
     return [s2(s1), t2];
   }
-  throw new Error('Unknown expression type');
+  throw new InferenceError('Unknown expression type');
 };

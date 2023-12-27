@@ -1,3 +1,4 @@
+import {InferenceError} from './exceptions';
 import {
   ApplicationExpression,
   Context,
@@ -221,7 +222,7 @@ const applyRight = (expressions: Expression[]): ApplicationExpression => {
   // [...rest, e1, e2] = expressions; isn't legal TS
   const length = expressions.length;
   if (length < 2) {
-    throw new Error('applyRight requires at least two expressions');
+    throw new InferenceError('applyRight requires at least two expressions');
   }
   const rest = expressions.slice(0, length - 2);
   const [e1, e2] = expressions.slice(length - 2);

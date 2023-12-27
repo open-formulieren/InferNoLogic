@@ -1,6 +1,7 @@
 // Copyright (c) 2023 Adam Jones
 //
 // SPDX-License-Identifier: MIT
+import {InferenceError} from './exceptions';
 import {Substitution, generalise, instantiate, newTypeVar, unify} from './helper';
 import {Context, Expression, MonoType, makeContext} from './models';
 
@@ -9,7 +10,7 @@ export const M = (typEnv: Context, expr: Expression, type: MonoType): Substituti
     console.log(`Variable ${expr.x}: expected to have type ${JSON.stringify(type)}`);
 
     const value = typEnv[expr.x];
-    if (value === undefined) throw new Error(`Undefined variable: ${expr.x}`);
+    if (value === undefined) throw new InferenceError(`Undefined variable: ${expr.x}`);
     return unify(type, instantiate(value), expr);
   }
 
@@ -69,5 +70,5 @@ export const M = (typEnv: Context, expr: Expression, type: MonoType): Substituti
     return s2(s1);
   }
 
-  throw new Error('Unknown expression type');
+  throw new InferenceError('Unknown expression type');
 };

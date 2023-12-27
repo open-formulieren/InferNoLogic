@@ -1,9 +1,15 @@
+import type {Substitution} from './helper';
 import type {Context} from './models';
 import type {JSONValue} from './parser';
 import {defaultContext, parseContext, parseJsonLogicExpression} from './parser';
 import {W} from './w';
 
 export {defaultContext};
+
+interface InferenceResult {
+  resultType: string;
+  intermediateVariables: Substitution['raw'];
+}
 
 /**
  * @beta
@@ -16,14 +22,12 @@ export const infer = (
   jsonLogic: JSONValue,
   data: JSONValue,
   context: Context = defaultContext
-): string => {
+): InferenceResult => {
   const typeenv = parseContext(data, context);
-  try {
-    const [subsitution, t] = W(...parseJsonLogicExpression(jsonLogic, typeenv));
-    const type: string = 'C' in t ? t.C : JSON.stringify([t.a, Object.keys(subsitution.raw)]);
-    const ctx: string = JSON.stringify(subsitution.raw);
-    return `result type: ${type}\n(intermediate) variables:${ctx}`;
-  } catch (error) {
-    return error.toString();
-  }
+  const [subsitution, t] = W(...parseJsonLogicExpression(jsonLogic, typeenv));
+  const type: string = 'C' in t ? t.C : JSON.stringify([t.a, Object.keys(subsitution.raw)]);
+  return {
+    resultType: type,
+    intermediateVariables: subsitution.raw,
+  };
 };
