@@ -6,7 +6,7 @@ import {W} from './w';
 
 export {defaultContext};
 
-interface InferenceResult {
+export interface InferenceResult {
   resultType: string;
   intermediateVariables: Substitution['raw'];
 }
